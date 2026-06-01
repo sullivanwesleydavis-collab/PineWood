@@ -17,6 +17,7 @@ animate();
 
 function init() {
   scene = new THREE.Scene();
+  scene.background = new THREE.Color('#2e143f');
   scene.fog = new THREE.FogExp2('#190d1f', 0.022);
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
@@ -25,7 +26,7 @@ function init() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setClearColor('#22111b');
+  renderer.setClearColor('#2e143f');
   document.body.appendChild(renderer.domElement);
 
   const ambient = new THREE.AmbientLight(0xffd8bb, 0.35);
@@ -37,12 +38,37 @@ function init() {
   sun.shadow.mapSize.set(1024, 1024);
   scene.add(sun);
 
-  const sky = new THREE.HemisphereLight(0xffd1b2, 0x061728, 0.8);
-  scene.add(sky);
+  const skyLight = new THREE.HemisphereLight(0xffd1b2, 0x061728, 0.8);
+  scene.add(skyLight);
+
+  const skyDome = new THREE.Mesh(
+    new THREE.SphereGeometry(450, 32, 16),
+    new THREE.MeshBasicMaterial({
+      color: 0xffad7a,
+      side: THREE.BackSide,
+      opacity: 0.9,
+      transparent: true,
+    })
+  );
+  skyDome.position.y = 20;
+  scene.add(skyDome);
+
+  const groundGeometry = new THREE.PlaneGeometry(300, 300, 40, 40);
+  for (let i = 0; i < groundGeometry.attributes.position.count; i += 1) {
+    const x = groundGeometry.attributes.position.getX(i);
+    const z = groundGeometry.attributes.position.getZ(i);
+    const variation = Math.sin(x * 0.08) * Math.cos(z * 0.08) * 0.35;
+    groundGeometry.attributes.position.setY(i, variation);
+  }
+  groundGeometry.computeVertexNormals();
 
   const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(300, 300),
-    new THREE.MeshPhongMaterial({ color: 0x2b2c22 })
+    groundGeometry,
+    new THREE.MeshStandardMaterial({
+      color: 0x2b3b24,
+      roughness: 1.0,
+      metalness: 0.0,
+    })
   );
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
